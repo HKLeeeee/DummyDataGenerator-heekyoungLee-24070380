@@ -1,15 +1,12 @@
 package com.ssemi.dummy.model;
 
-/**
- * 주문(Order) 도메인 모델
- */
 public class Order {
 
-    private String orderId;        // 예: ORD-20260612-0001
-    private String sampleId;       // 등록된 시료 ID
-    private String customerName;   // 고객명
-    private int quantity;          // 주문 수량
-    private String status;         // OrderStatus 문자열
+    private String orderId;
+    private String sampleId;
+    private String customerName;
+    private int quantity;
+    private String status;
 
     public Order() {}
 

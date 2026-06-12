@@ -2,15 +2,6 @@ package com.ssemi.dummy;
 
 import java.util.Scanner;
 
-/**
- * Dummy 데이터 생성 Tool - 메인 진입점
- *
- * 메뉴:
- *   [1] 기본 Dummy 데이터 생성 (시료 5종, 주문 10건)
- *   [2] 대량 Dummy 데이터 생성 (시료 10종, 주문 50건)
- *   [3] 데이터 초기화 (파일 삭제)
- *   [0] 종료
- */
 public class Main {
 
     public static void main(String[] args) {

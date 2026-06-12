@@ -1,16 +1,12 @@
 package com.ssemi.dummy.model;
 
-/**
- * 시료(Sample) 도메인 모델
- * 반도체 시료의 기본 정보를 보유한다.
- */
 public class Sample {
 
-    private String id;               // 예: S-001
-    private String name;             // 예: SiC 파워기판-6인치
-    private double avgProductionTime; // 단위: min/ea
-    private double yieldRate;        // 수율 (0.0 ~ 1.0)
-    private int stock;               // 현재 재고 (ea)
+    private String id;
+    private String name;
+    private double avgProductionTime;
+    private double yieldRate;
+    private int stock;
 
     public Sample() {}
 

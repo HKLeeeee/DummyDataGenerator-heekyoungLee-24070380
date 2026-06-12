@@ -10,14 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Dummy 데이터 생성 서비스
- * 팩토리, 저장소를 조합하여 데이터 생성/초기화/요약 출력을 담당한다.
- */
 public class DummyDataService {
 
     private static final String SAMPLES_PATH = "data/samples.json";
     private static final String ORDERS_PATH  = "data/orders.json";
+
+    // 재현성을 위한 고정 기본 시드 — 동일 환경에서 동일 결과를 보장한다
+    private static final long DEFAULT_SEED = 42L;
 
     private final JsonRepository repository;
 
@@ -25,36 +24,18 @@ public class DummyDataService {
         this.repository = new JsonRepository(SAMPLES_PATH, ORDERS_PATH);
     }
 
-    // -----------------------------------------------------------------------
-    // Public API
-    // -----------------------------------------------------------------------
-
-    /**
-     * 기본 더미 데이터 생성 (시료 5종, 주문 10건, 랜덤 시드)
-     */
     public void generateDefault() {
-        long seed = System.currentTimeMillis();
-        generate(5, 10, seed);
+        generate(5, 10, DEFAULT_SEED);
     }
 
-    /**
-     * 대량 더미 데이터 생성 (시료 10종, 주문 50건, 랜덤 시드)
-     */
     public void generateBulk() {
-        long seed = System.currentTimeMillis();
-        generate(10, 50, seed);
+        generate(10, 50, DEFAULT_SEED);
     }
 
-    /**
-     * 지정 옵션으로 더미 데이터 생성
-     *
-     * @param sampleCount  시료 생성 수
-     * @param orderCount   주문 생성 수
-     * @param seed         랜덤 시드 (재현성)
-     */
     public void generate(int sampleCount, int orderCount, long seed) {
+        // SampleFactory와 OrderFactory에 파생 시드를 부여해 난수 열의 독립성을 보장한다
         SampleFactory sf = new SampleFactory(seed);
-        OrderFactory of = new OrderFactory(seed);
+        OrderFactory of = new OrderFactory(seed + 1);
 
         List<Sample> samples = sf.generateSamples(sampleCount);
         List<Order>  orders  = of.generateOrders(samples, orderCount);
@@ -65,24 +46,17 @@ public class DummyDataService {
         printSummary(samples, orders, seed);
     }
 
-    /**
-     * 저장된 데이터 파일 삭제 (초기화)
-     */
     public void reset() {
         repository.reset();
-        System.out.println("[초기화] data/samples.json, data/orders.json 삭제 완료");
+        System.out.println("[초기화] " + SAMPLES_PATH + ", " + ORDERS_PATH + " 삭제 완료");
     }
-
-    // -----------------------------------------------------------------------
-    // Private helpers
-    // -----------------------------------------------------------------------
 
     private void printSummary(List<Sample> samples, List<Order> orders, long seed) {
         System.out.println("==========================================");
         System.out.println("  Dummy 데이터 생성 완료");
         System.out.println("==========================================");
         System.out.printf("  랜덤 시드  : %d%n", seed);
-        System.out.printf("  시료 저장  : %s (%d건)%n", "data/samples.json", samples.size());
+        System.out.printf("  시료 저장  : %s (%d건)%n", SAMPLES_PATH, samples.size());
         System.out.println();
         System.out.println("  [시료 목록]");
         for (Sample s : samples) {
@@ -93,7 +67,7 @@ public class DummyDataService {
                     s.getStock());
         }
         System.out.println();
-        System.out.printf("  주문 저장  : %s (%d건)%n", "data/orders.json", orders.size());
+        System.out.printf("  주문 저장  : %s (%d건)%n", ORDERS_PATH, orders.size());
         System.out.println();
         System.out.println("  [상태별 주문 건수]");
         Map<String, Long> statusCount = orders.stream()

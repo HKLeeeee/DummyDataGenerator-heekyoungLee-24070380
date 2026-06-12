@@ -9,12 +9,6 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * JSON 파일 기반 저장소
- *
- * 외부 라이브러리 없이 직접 JSON 직렬화/역직렬화를 수행한다.
- * PoC 2(DataPersistence) 와 동일한 파일 스키마를 따른다.
- */
 public class JsonRepository {
 
     private final String samplesPath;
@@ -24,10 +18,6 @@ public class JsonRepository {
         this.samplesPath = samplesPath;
         this.ordersPath = ordersPath;
     }
-
-    // -----------------------------------------------------------------------
-    // Sample CRUD
-    // -----------------------------------------------------------------------
 
     public void saveSamples(List<Sample> samples) {
         ensureParentDir(samplesPath);
@@ -47,10 +37,6 @@ public class JsonRepository {
         return parseSamples(json);
     }
 
-    // -----------------------------------------------------------------------
-    // Order CRUD
-    // -----------------------------------------------------------------------
-
     public void saveOrders(List<Order> orders) {
         ensureParentDir(ordersPath);
         StringBuilder sb = new StringBuilder("[\n");
@@ -69,19 +55,10 @@ public class JsonRepository {
         return parseOrders(json);
     }
 
-    // -----------------------------------------------------------------------
-    // Reset
-    // -----------------------------------------------------------------------
-
-    /** 파일 삭제. 파일이 없으면 무시한다. */
     public void reset() {
         deleteIfExists(samplesPath);
         deleteIfExists(ordersPath);
     }
-
-    // -----------------------------------------------------------------------
-    // Serialization helpers
-    // -----------------------------------------------------------------------
 
     private String toJson(Sample s) {
         return "  {"
@@ -102,10 +79,6 @@ public class JsonRepository {
                 + "\"status\":\"" + escape(o.getStatus()) + "\""
                 + "}";
     }
-
-    // -----------------------------------------------------------------------
-    // Parsing helpers — simple line-by-line object parser
-    // -----------------------------------------------------------------------
 
     private List<Sample> parseSamples(String json) {
         List<Sample> list = new ArrayList<>();
@@ -135,10 +108,7 @@ public class JsonRepository {
         return list;
     }
 
-    /**
-     * JSON 배열 문자열에서 각 객체({...})를 추출한다.
-     * 단순 단일 depth 객체만 지원 (중첩 없음).
-     */
+    /** 단순 단일 depth 객체({...})만 지원 — 중첩 구조 없음 */
     private List<String> splitObjects(String json) {
         List<String> objects = new ArrayList<>();
         int depth = 0;
@@ -164,8 +134,18 @@ public class JsonRepository {
         int idx = obj.indexOf(pattern);
         if (idx < 0) return "";
         int start = idx + pattern.length();
-        int end = obj.indexOf("\"", start);
-        if (end < 0) return "";
+        // 이스케이프된 \" 를 값의 끝으로 오인하지 않도록 \\ 선행 여부를 검사한다
+        int end = start;
+        while (end < obj.length()) {
+            int quote = obj.indexOf("\"", end);
+            if (quote < 0) return "";
+            if (quote > 0 && obj.charAt(quote - 1) == '\\') {
+                end = quote + 1;
+            } else {
+                end = quote;
+                break;
+            }
+        }
         return unescape(obj.substring(start, end));
     }
 
@@ -199,10 +179,6 @@ public class JsonRepository {
         return s.replace("\\\"", "\"").replace("\\\\", "\\");
     }
 
-    // -----------------------------------------------------------------------
-    // File I/O helpers
-    // -----------------------------------------------------------------------
-
     private void writeFile(String path, String content) {
         try {
             Files.writeString(Path.of(path), content, StandardCharsets.UTF_8,
@@ -226,7 +202,8 @@ public class JsonRepository {
         try {
             Files.deleteIfExists(Path.of(path));
         } catch (IOException e) {
-            // 무시
+            // Files.deleteIfExists는 삭제 대상 파일이 없을 때 예외를 던지지 않으므로
+            // 여기에 도달하는 경우는 OS 레벨 권한 오류뿐이며 초기화 목적상 무시한다
         }
     }
 

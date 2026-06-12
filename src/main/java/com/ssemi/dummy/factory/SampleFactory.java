@@ -6,17 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * 시료(Sample) 더미 데이터 팩토리
- *
- * - 반도체 도메인에 현실적인 시료명을 사용한다.
- * - avgProductionTime: 0.2 ~ 1.0 min/ea
- * - yieldRate: 0.70 ~ 0.99
- * - stock: 0 포함 다양하게 생성
- */
 public class SampleFactory {
 
-    // 반도체 시료 이름 후보 (실제 산업에서 사용하는 품목)
     private static final String[] SEMICONDUCTOR_NAMES = {
             "실리콘 웨이퍼-8인치",
             "GaN 에피택셜-4인치",
@@ -32,16 +23,15 @@ public class SampleFactory {
             "Ge 기판-6인치"
     };
 
-    // 최소 평균 생산시간 (min/ea)
     private static final double MIN_AVG_PRODUCTION_TIME = 0.2;
-    // 최대 평균 생산시간 (min/ea)
     private static final double MAX_AVG_PRODUCTION_TIME = 1.0;
-    // 최소 수율
     private static final double MIN_YIELD = 0.70;
-    // 최대 수율
     private static final double MAX_YIELD = 0.99;
-    // 기본 생성 시료 수
     private static final int DEFAULT_SAMPLE_COUNT = 5;
+    private static final int MIN_STOCK = 10;
+    private static final int MAX_STOCK = 200;
+    // 재고 고갈(0) 확률을 10%로 고정하기 위한 분모
+    private static final int STOCK_DEPLETION_DENOMINATOR = 10;
 
     private final Random random;
 
@@ -49,21 +39,12 @@ public class SampleFactory {
         this.random = new Random(seed);
     }
 
-    /**
-     * 기본 시료 목록 생성 (5종)
-     */
     public List<Sample> generateDefaultSamples() {
         return generateSamples(DEFAULT_SAMPLE_COUNT);
     }
 
-    /**
-     * 지정한 개수만큼 시료 생성
-     *
-     * @param count 생성 개수
-     */
     public List<Sample> generateSamples(int count) {
         List<Sample> result = new ArrayList<>();
-        // 이름 후보 인덱스를 섞어서 순서대로 배정 (중복 방지)
         List<String> namePool = buildNamePool(count);
 
         for (int i = 0; i < count; i++) {
@@ -81,9 +62,7 @@ public class SampleFactory {
         return result;
     }
 
-    // -----------------------------------------------------------------------
-
-    /** 이름 풀 빌드: count가 후보 수를 초과하면 순환 사용 */
+    /** count가 후보 수를 초과하면 순환 사용 */
     private List<String> buildNamePool(int count) {
         List<String> pool = new ArrayList<>();
         for (int i = 0; i < count; i++) {
@@ -92,11 +71,9 @@ public class SampleFactory {
         return pool;
     }
 
-    /** 재고: 0~200 범위, 0 포함 다양하게 생성 */
     private int generateStock() {
-        int roll = random.nextInt(10);
-        if (roll == 0) return 0;           // 10% 확률 고갈
-        return 10 + random.nextInt(191);   // 10~200
+        if (random.nextInt(STOCK_DEPLETION_DENOMINATOR) == 0) return 0;
+        return MIN_STOCK + random.nextInt(MAX_STOCK - MIN_STOCK + 1);
     }
 
     private double roundTwoDecimals(double value) {
